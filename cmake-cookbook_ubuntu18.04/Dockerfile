@@ -11,7 +11,7 @@ ADD http://worldclockapi.com/api/json/utc/now /opt/docker/etc/timestamp
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get --yes -qq update \
  && apt-get --yes -qq upgrade \
- && apt-get --yes -qq install \
+ && apt-get --yes -qq install --fix-missing \
                       bzip2 \
                       cpio \
                       curl \
@@ -54,13 +54,16 @@ RUN apt-get --yes -qq update \
 
 # Run common commands
 COPY run_commands /opt/docker/bin/run_commands
+RUN chmod +x /opt/docker/bin/run_commands
 RUN /opt/docker/bin/run_commands
 
 # Add a file for users to source
-COPY entrypoint_source /opt/docker/bin/entrypoint_source
-
 # Add a file that wraps that for use with the `ENTRYPOINT`.
-COPY entrypoint /opt/docker/bin/entrypoint
+COPY entrypoint_source entrypoint /opt/docker/bin/
+
+RUN chmod +x \
+    /opt/docker/bin/entrypoint_source \
+    /opt/docker/bin/entrypoint
 
 # Ensure that all containers start with tini and the user selected process.
 ENTRYPOINT [ "/opt/docker/bin/tini", "--", "/opt/docker/bin/entrypoint" ]
